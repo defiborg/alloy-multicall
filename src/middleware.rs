@@ -1,7 +1,7 @@
 use crate::{
-    constants,
     contract::IMulticall3::{self, IMulticall3Instance},
     error::MulticallError,
+    multicall_address::address_by_chain_id,
 };
 use alloy_contract::{
     private::{Network, Transport},
@@ -127,85 +127,37 @@ where
     T: Transport + Clone,
     P: Provider<T, N> + Clone,
 {
-    /// Asynchronously creates a new [Multicall] instance from the given provider.
+    /// Create a new [Multicall] instance from the given provider and known multicall address.
     ///
-    /// If provided with an `address`, it instantiates the Multicall contract with that address,
-    /// otherwise it defaults to
-    /// [0xcA11bde05977b3631167028862bE2a173976CA11](`constants::MULTICALL_ADDRESS`).
-    ///
-    /// # Errors
-    ///
-    /// Returns a [`MulticallError`] if:
-    /// - The provider returns an error whilst calling `eth_chainId`.
-    /// - A `None` address is provided, and the provider's chain ID is [not
-    ///   supported](constants::MULTICALL_SUPPORTED_CHAINS).
-    pub async fn new(provider: P, address: Option<Address>) -> Result<Self> {
-        // If an address is provided by the user, we'll use this.
-        // Otherwise fetch the chain ID to confirm it's supported.
-        let address = match address {
-            Some(address) => address,
-            None => {
-                let chain_id = provider
-                    .get_chain_id()
-                    .await
-                    .map_err(MulticallError::TransportError)?;
-
-                if !constants::MULTICALL_SUPPORTED_CHAINS.contains(&chain_id) {
-                    return Err(MulticallError::InvalidChainId(chain_id));
-                }
-                constants::MULTICALL_ADDRESS
-            }
-        };
-
-        // Create the multicall contract
+    /// # Note
+    ///  This method doesn't verify if the address is a valid Multicall contract address.
+    pub fn new(provider: P, address: Address) -> Self {
         let contract = IMulticall3::new(address, provider);
-
-        Ok(Self {
+        Self {
             calls: vec![],
             contract,
             version: MulticallVersion::Multicall3,
-        })
+        }
     }
 
-    /// Synchronously creates a new [Multicall] instance from the given provider.
-    ///
-    /// If provided with an `address`, it instantiates the Multicall contract with that address.
-    /// Otherwise if a supported chain_id is provided, it defaults to
-    /// [0xcA11bde05977b3631167028862bE2a173976CA11](`constants::MULTICALL_ADDRESS`).
+    /// Create a new [Multicall] from the given provider and chain_id and chain's well-known multicall address.
     ///
     /// # Errors
-    ///
     /// Returns a [`MulticallError`] if:
-    /// - The provided `chain_id` is [not supported](constants::MULTICALL_SUPPORTED_CHAINS).
-    /// - Neither an `address` or `chain_id` is provided. This method requires at least one of these
-    ///   to be provided.
-    pub async fn new_with_chain_id(
-        provider: P,
-        address: Option<Address>,
-        chain_id: Option<impl Into<u64>>,
-    ) -> Result<Self> {
-        let address = match (address, chain_id) {
-            (Some(address), _) => address,
-            (_, Some(chain_id)) => {
-                let chain_id = chain_id.into();
-                if !constants::MULTICALL_SUPPORTED_CHAINS.contains(&chain_id) {
-                    return Err(MulticallError::InvalidChainId(chain_id));
-                }
-                constants::MULTICALL_ADDRESS
-            }
+    /// - the provider's chain ID is [not supported](constants::MULTICALL_SUPPORTED_CHAINS) .
+    pub fn with_chain_id(provider: P, chain_id: u64) -> Result<Self> {
+        address_by_chain_id(chain_id)
+            .ok_or(MulticallError::InvalidChainId(chain_id))
+            .map(|addr| Self::new(provider, addr))
+    }
 
-            // If neither an address or chain_id is provided then return an error.
-            _ => return Err(MulticallError::InvalidInitializationParams),
-        };
-
-        // Create the multicall contract
-        let contract = IMulticall3::new(address, provider);
-
-        Ok(Self {
-            calls: vec![],
-            contract,
-            version: MulticallVersion::Multicall3,
-        })
+    /// Create a new [Multicall] by querying the chain ID from the provider and using the chain's well-known multicall address.
+    pub async fn with_provider_chain_id(provider: P) -> Result<Self> {
+        let chain_id = provider
+            .get_chain_id()
+            .await
+            .map_err(MulticallError::TransportError)?;
+        Self::with_chain_id(provider, chain_id)
     }
 
     /// Sets the [MulticallVersion] which is used to determine which functions to use when making
@@ -668,6 +620,7 @@ where
 mod tests {
 
     use super::*;
+    use crate::multicall_address::{MULTICALL_ADDRESS_DEFAULT_CHAINS, MULTICALL_DEFAULT_ADDRESS};
     use alloy_primitives::{address, utils::format_ether};
     use alloy_sol_types::sol;
 
@@ -684,19 +637,18 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_create_multicall() {
+    async fn create_multicall_basic() {
         let rpc_url = "https://rpc.ankr.com/eth".parse().unwrap();
         let provider = alloy_provider::ProviderBuilder::new().on_http(rpc_url);
 
         // New Multicall with default address 0xcA11bde05977b3631167028862bE2a173976CA11
-        let multicall = Multicall::new(&provider, None).await.unwrap();
-        assert_eq!(multicall.contract.address(), &constants::MULTICALL_ADDRESS);
+        let multicall =
+            Multicall::with_chain_id(&provider, MULTICALL_ADDRESS_DEFAULT_CHAINS[0]).unwrap();
+        assert_eq!(multicall.contract.address(), &MULTICALL_DEFAULT_ADDRESS);
 
         // New Multicall with user provided address
         let multicall_address = Address::ZERO;
-        let multicall = Multicall::new(&provider, Some(multicall_address))
-            .await
-            .unwrap();
+        let multicall = Multicall::new(&provider, multicall_address);
         assert_eq!(multicall.contract.address(), &multicall_address);
     }
 
@@ -707,7 +659,7 @@ mod tests {
         let weth_address = address!("C02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2");
 
         // Create the multicall instance
-        let mut multicall = Multicall::new(provider.clone(), None).await.unwrap();
+        let mut multicall = Multicall::with_provider_chain_id(&provider).await.unwrap();
 
         // Generate the WETH ERC20 instance we'll be using to create the individual calls
         let functions = ERC20::abi::functions();
@@ -751,10 +703,10 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_multicall_specific_methods() {
+    async fn multicall_specific_methods() {
         let rpc_url = "https://rpc.ankr.com/eth".parse().unwrap();
         let provider = alloy_provider::ProviderBuilder::new().on_http(rpc_url);
-        let mut multicall = Multicall::new(provider, None).await.unwrap();
+        let mut multicall = Multicall::new(provider, MULTICALL_DEFAULT_ADDRESS);
 
         multicall
             .add_get_basefee(false)

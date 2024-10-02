@@ -3,12 +3,14 @@ use alloy_primitives::{address, Address};
 
 /// The Multicall3 contract address that is deployed to each [`MULTICALL_SUPPORTED_CHAINS`]:
 /// [`0xcA11bde05977b3631167028862bE2a173976CA11`](https://etherscan.io/address/0xcA11bde05977b3631167028862bE2a173976CA11)
-pub const MULTICALL_ADDRESS: Address = address!("cA11bde05977b3631167028862bE2a173976CA11");
+pub const MULTICALL_DEFAULT_ADDRESS: Address = address!("cA11bde05977b3631167028862bE2a173976CA11");
+/// The Multicall3 contract address that is deployed at `TEazPvZwDjDtFeJupyo7QunvnrnUjPH8ED` when using base58 encoding.
+pub const MULTICALL_TRON_ADDRESS: Address = address!("32a4F47A74a6810BD0bF861CABAb99656a75DE9E");
 
-/// The chain IDs that Multicall3 has been deployed to at [`MULTICALL_ADDRESS`].
+/// The chain IDs that Multicall3 has been deployed to at [`MULTICALL_ADDRESS_DEFAULT`].
 ///
 /// Taken from <https://www.multicall3.com/deployments>
-pub const MULTICALL_SUPPORTED_CHAINS: &[u64] = {
+pub const MULTICALL_ADDRESS_DEFAULT_CHAINS: &[u64] = {
     use NamedChain::*;
     &[
         Mainnet as u64,                  // Mainnet
@@ -110,3 +112,16 @@ pub const MULTICALL_SUPPORTED_CHAINS: &[u64] = {
         31337, // Anvil
     ]
 };
+
+/// Get the Multicall3 contract address for a given chain ID.
+///
+/// Taken from <https://www.multicall3.com/deployments>
+pub fn address_by_chain_id(chain_id: u64) -> Option<Address> {
+    match chain_id {
+        728126428 => Some(MULTICALL_TRON_ADDRESS),
+        chain_id if MULTICALL_ADDRESS_DEFAULT_CHAINS.contains(&chain_id) => {
+            Some(MULTICALL_DEFAULT_ADDRESS)
+        }
+        _ => None,
+    }
+}
