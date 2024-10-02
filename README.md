@@ -9,7 +9,7 @@ Easily send multicall transactions using [Alloy].
 Add `alloy-multicall` to your `Cargo.toml`.
 
 ```toml
-alloy-multicall = "0.1.2"
+alloy-multicall = "0.1.3"
 ```
 
 ## Example
