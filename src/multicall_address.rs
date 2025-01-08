@@ -1,5 +1,5 @@
+use alloy::primitives::{address, Address};
 use alloy_chains::NamedChain;
-use alloy_primitives::{address, Address};
 
 /// The Multicall3 contract address that is deployed to each [`MULTICALL_SUPPORTED_CHAINS`]:
 /// [`0xcA11bde05977b3631167028862bE2a173976CA11`](https://etherscan.io/address/0xcA11bde05977b3631167028862bE2a173976CA11)
@@ -43,8 +43,8 @@ pub const MULTICALL_ADDRESS_DEFAULT_CHAINS: &[u64] = {
         64240,                           // Fantom Sonic
         BinanceSmartChain as u64,        // BNB Smart Chain
         BinanceSmartChainTestnet as u64, // BNB Smart Chain Testnet
-        5611,                            // opBNB Testnet
-        204,                             // opBNB
+        OpBNBTestnet as u64,             // opBNB Testnet
+        OpBNBMainnet as u64,             // opBNB
         Moonbeam as u64,                 // Moonbeam
         Moonriver as u64,                // Moonriver
         Moonbase as u64,                 // Moonbase Alpha Testnet
@@ -54,10 +54,10 @@ pub const MULTICALL_ADDRESS_DEFAULT_CHAINS: &[u64] = {
         Cronos as u64,                   // Cronos
         CronosTestnet as u64,            // Cronos Testnet
         122,                             // Fuse
-        14,                              // Flare Mainnet
+        Flare as u64,                    // Flare Mainnet
         19,                              // Songbird Canary Network
         16,                              // Coston Testnet
-        114,                             // Coston2 Testnet
+        FlareCoston2 as u64,             // Coston2 Testnet
         Boba as u64,                     // Boba
         Aurora as u64,                   // Aurora
         592,                             // Astar
@@ -88,10 +88,10 @@ pub const MULTICALL_ADDRESS_DEFAULT_CHAINS: &[u64] = {
         1234,                            // Step Network
         Canto as u64,                    // Canto
         CantoTestnet as u64,             // Canto Testnet
-        4689,                            // Iotex
+        Iotex as u64,                    // Iotex
         32520,                           // Bitgert
         2222,                            // Kava
-        5003,                            // Mantle Sepolia
+        MantleSepolia as u64,            // Mantle Sepolia
         MantleTestnet as u64,            // Mantle Testnet
         Mantle as u64,                   // Mantle
         8082,                            // Shardeum Sphinx

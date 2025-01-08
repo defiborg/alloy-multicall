@@ -1,6 +1,5 @@
 #![allow(missing_docs)]
-
-use alloy_sol_types::sol;
+use alloy::sol;
 
 sol! {
   #[derive(Debug)]

@@ -1,7 +1,10 @@
-use alloy_dyn_abi::DynSolValue;
+use alloy::{
+    dyn_abi::DynSolValue,
+    primitives::{address, U256},
+    sol,
+    sol_types::JsonAbiExt as _,
+};
 use alloy_multicall::Multicall;
-use alloy_primitives::{address, U256};
-use alloy_sol_types::{sol, JsonAbiExt};
 
 sol! {
     #[derive(Debug)]
@@ -19,7 +22,7 @@ async fn main() {
     tracing_subscriber::fmt::init();
 
     let rpc_url = "https://rpc.ankr.com/eth".parse().unwrap();
-    let provider = alloy_provider::ProviderBuilder::new().on_http(rpc_url);
+    let provider = alloy::providers::ProviderBuilder::new().on_http(rpc_url);
     let uniswap_v2 = address!("7a250d5630b4cf539739df2c5dacb4c659f2488d");
 
     let mut multicall = Multicall::with_provider_chain_id(&provider).await.unwrap();

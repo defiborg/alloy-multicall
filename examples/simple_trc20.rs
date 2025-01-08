@@ -1,8 +1,9 @@
-use alloy_dyn_abi::DynSolValue;
+use alloy::{
+    dyn_abi::DynSolValue,
+    primitives::{address, Bytes},
+    sol,
+};
 use alloy_multicall::Multicall;
-use alloy_primitives::{address, Bytes};
-use alloy_sol_types::sol;
-use std::result::Result as StdResult;
 
 sol! {
     #[derive(Debug, PartialEq)]
@@ -19,8 +20,8 @@ sol! {
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
-    let rpc_url = "https://rpc.ankr.com/tron_jsonrpc".parse().unwrap();
-    let provider = alloy_provider::ProviderBuilder::new().on_http(rpc_url);
+    let rpc_url = "https://api.trongrid.io/jsonrpc".parse().unwrap();
+    let provider = alloy::providers::ProviderBuilder::new().on_http(rpc_url);
     // Tron use base58 encoded, below is hex encoded value of `TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t`
     let usdc_contract_addr = address!("a614f803B6FD780986A42c78Ec9c7f77e6DeD13C");
 
@@ -77,7 +78,7 @@ async fn main() {
     assert_results(results);
 }
 
-fn assert_results(results: Vec<StdResult<DynSolValue, Bytes>>) {
+fn assert_results(results: Vec<Result<DynSolValue, Bytes>>) {
     // Get the expected individual results.
     let name = results.get(1).unwrap().as_ref().unwrap().as_str().unwrap();
     let decimals = results
