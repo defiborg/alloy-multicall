@@ -1,6 +1,3 @@
-use alloy_contract::Error as ContractError;
-use alloy_transport::TransportError;
-
 /// Errors when interacting with a Multicall contract.
 #[derive(Debug, thiserror::Error)]
 pub enum MulticallError {
@@ -10,11 +7,11 @@ pub enum MulticallError {
 
     /// An error occurred interacting with a contract over RPC.
     #[error(transparent)]
-    TransportError(#[from] TransportError),
+    TransportError(#[from] alloy::transports::TransportError),
 
     /// Error when interacting with contracts. This is an error from the `contract` crate.
     #[error(transparent)]
-    ContractError(#[from] ContractError),
+    ContractError(#[from] alloy::contract::Error),
 
     /// Multicall reverted due to an individual call failing.
     #[error("Multicall call reverted but `allowFailure` is false")]

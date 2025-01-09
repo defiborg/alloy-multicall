@@ -1,8 +1,9 @@
-use alloy_dyn_abi::DynSolValue;
+use alloy::{
+    dyn_abi::DynSolValue,
+    primitives::{address, Bytes},
+    sol,
+};
 use alloy_multicall::Multicall;
-use alloy_primitives::{address, Bytes};
-use alloy_sol_types::sol;
-use std::result::Result as StdResult;
 
 sol! {
     #[derive(Debug, PartialEq)]
@@ -20,7 +21,7 @@ sol! {
 async fn main() {
     tracing_subscriber::fmt::init();
     let rpc_url = "https://rpc.ankr.com/eth".parse().unwrap();
-    let provider = alloy_provider::ProviderBuilder::new().on_http(rpc_url);
+    let provider = alloy::providers::ProviderBuilder::new().on_http(rpc_url);
     let weth_address = address!("C02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2");
 
     // Create the multicall instance
@@ -67,7 +68,7 @@ async fn main() {
     assert_results(results);
 }
 
-fn assert_results(results: Vec<StdResult<DynSolValue, Bytes>>) {
+fn assert_results(results: Vec<Result<DynSolValue, Bytes>>) {
     // Get the expected individual results.
     let name = results.get(1).unwrap().as_ref().unwrap().as_str().unwrap();
     let decimals = results

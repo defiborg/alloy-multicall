@@ -1,19 +1,21 @@
+use std::{marker::PhantomData, result::Result as StdResult};
+
+use alloy::{
+    contract::{
+        private::{Network, Transport},
+        CallBuilder, CallDecoder,
+    },
+    dyn_abi::{DynSolValue, JsonAbiExt as _},
+    json_abi::Function,
+    primitives::{Address, Bytes, U256},
+    providers::Provider,
+};
+
 use crate::{
-    contract::IMulticall3::{self, IMulticall3Instance},
+    contract::IMulticall3::{self, IMulticall3Instance, Result as MulticallResult},
     error::MulticallError,
     multicall_address::address_by_chain_id,
 };
-use alloy_contract::{
-    private::{Network, Transport},
-    CallBuilder, CallDecoder,
-};
-
-use alloy_dyn_abi::{DynSolValue, JsonAbiExt};
-use alloy_json_abi::Function;
-use alloy_primitives::{Address, Bytes, U256};
-use alloy_provider::Provider;
-use std::{marker::PhantomData, result::Result as StdResult};
-use IMulticall3::Result as MulticallResult;
 
 /// Alias for [std::result::Result]<T, [MulticallError]>
 pub type Result<T> = std::result::Result<T, MulticallError>;
@@ -621,8 +623,8 @@ mod tests {
 
     use super::*;
     use crate::multicall_address::{MULTICALL_ADDRESS_DEFAULT_CHAINS, MULTICALL_DEFAULT_ADDRESS};
-    use alloy_primitives::{address, utils::format_ether};
-    use alloy_sol_types::sol;
+    use alloy::primitives::{address, utils::format_ether};
+    use alloy::sol;
 
     sol! {
         #[derive(Debug, PartialEq)]
@@ -639,7 +641,7 @@ mod tests {
     #[tokio::test]
     async fn create_multicall_basic() {
         let rpc_url = "https://rpc.ankr.com/eth".parse().unwrap();
-        let provider = alloy_provider::ProviderBuilder::new().on_http(rpc_url);
+        let provider = alloy::providers::ProviderBuilder::new().on_http(rpc_url);
 
         // New Multicall with default address 0xcA11bde05977b3631167028862bE2a173976CA11
         let multicall =
@@ -655,7 +657,7 @@ mod tests {
     #[tokio::test]
     async fn test_multicall_weth() {
         let rpc_url = "https://rpc.ankr.com/eth".parse().unwrap();
-        let provider = alloy_provider::ProviderBuilder::new().on_http(rpc_url);
+        let provider = alloy::providers::ProviderBuilder::new().on_http(rpc_url);
         let weth_address = address!("C02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2");
 
         // Create the multicall instance
@@ -705,7 +707,7 @@ mod tests {
     #[tokio::test]
     async fn multicall_specific_methods() {
         let rpc_url = "https://rpc.ankr.com/eth".parse().unwrap();
-        let provider = alloy_provider::ProviderBuilder::new().on_http(rpc_url);
+        let provider = alloy::providers::ProviderBuilder::new().on_http(rpc_url);
         let mut multicall = Multicall::new(provider, MULTICALL_DEFAULT_ADDRESS);
 
         multicall
@@ -758,7 +760,10 @@ mod tests {
         .unwrap();
 
         assert_eq!(chain_id, 1); // Provider forked from Mainnet should always have chain ID 1
-        assert_eq!(gas_limit, 30_000_000); // Mainnet gas limit is 30m
+        assert!(
+            (29_900_000..=30_200_000).contains(&gas_limit),
+            "{gas_limit}"
+        ); // Mainnet gas limit is approx 30m
         assert!((306_276..=306_277).contains(&eth_balance)); // Parity multisig bug affected wallet
                                                              // - balance isn't expected to change
                                                              // significantly
