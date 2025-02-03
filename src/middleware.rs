@@ -1,10 +1,7 @@
 use std::{marker::PhantomData, result::Result as StdResult};
 
 use alloy::{
-    contract::{
-        private::{Network, Transport},
-        CallBuilder, CallDecoder,
-    },
+    contract::{private::Network, CallBuilder, CallDecoder},
     dyn_abi::{DynSolValue, JsonAbiExt as _},
     json_abi::Function,
     primitives::{Address, Bytes, U256},
@@ -109,25 +106,23 @@ impl MulticallVersion {
 
 #[derive(Debug, Clone)]
 #[must_use = "Multicall does nothing unless you use `call`"]
-pub struct Multicall<T, P, N>
+pub struct Multicall<P, N>
 where
     N: Network,
-    T: Transport + Clone,
-    P: Provider<T, N> + Clone,
+    P: Provider<N> + Clone,
 {
     /// The internal calls vector
     calls: Vec<Call>,
     /// The Multicall3 contract
-    contract: IMulticall3Instance<T, P, N>,
+    contract: IMulticall3Instance<(), P, N>,
     /// The Multicall version to use. The default is 3.
     version: MulticallVersion,
 }
 
-impl<T, P, N> Multicall<T, P, N>
+impl<P, N> Multicall<P, N>
 where
     N: Network,
-    T: Transport + Clone,
-    P: Provider<T, N> + Clone,
+    P: Provider<N> + Clone,
 {
     /// Create a new [Multicall] instance from the given provider and known multicall address.
     ///
@@ -477,7 +472,7 @@ where
     ///
     /// # Returns
     /// Returns a [CallBuilder], which uses [IMulticall3::aggregateCall] for decoding.
-    pub fn as_aggregate(&self) -> CallBuilder<T, &P, PhantomData<IMulticall3::aggregateCall>, N> {
+    pub fn as_aggregate(&self) -> CallBuilder<(), &P, PhantomData<IMulticall3::aggregateCall>, N> {
         let calls = self
             .calls
             .clone()
@@ -499,7 +494,7 @@ where
     /// Returns a [CallBuilder], which uses [IMulticall3::tryAggregateCall] for decoding.
     pub fn as_try_aggregate(
         &self,
-    ) -> CallBuilder<T, &P, PhantomData<IMulticall3::tryAggregateCall>, N> {
+    ) -> CallBuilder<(), &P, PhantomData<IMulticall3::tryAggregateCall>, N> {
         let mut allow_failure = true;
 
         let calls = self
@@ -533,7 +528,7 @@ where
     /// Returns a [CallBuilder], which uses [IMulticall3::aggregate3Call] for decoding.
     pub fn as_aggregate_3(
         &self,
-    ) -> CallBuilder<T, &P, PhantomData<IMulticall3::aggregate3Call>, N> {
+    ) -> CallBuilder<(), &P, PhantomData<IMulticall3::aggregate3Call>, N> {
         let calls = self
             .calls
             .clone()
