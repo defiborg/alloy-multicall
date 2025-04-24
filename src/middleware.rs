@@ -277,7 +277,8 @@ where
 
                 let multicall_result = call.call().await?;
 
-                self.parse_multicall_result(multicall_result.returnData)
+                self.parse_multicall_result(multicall_result.into_iter())
+
             }
 
             MulticallVersion::Multicall3 => {
@@ -285,7 +286,8 @@ where
 
                 let multicall_result = call.call().await?;
 
-                self.parse_multicall_result(multicall_result.returnData)
+                self.parse_multicall_result(multicall_result.into_iter())
+
             }
         }
     }
