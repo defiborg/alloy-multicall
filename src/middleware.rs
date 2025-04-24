@@ -114,7 +114,7 @@ where
     /// The internal calls vector
     calls: Vec<Call>,
     /// The Multicall3 contract
-    contract: IMulticall3Instance<(), P, N>,
+    contract: IMulticall3Instance<P, N>,
     /// The Multicall version to use. The default is 3.
     version: MulticallVersion,
 }
@@ -587,7 +587,7 @@ where
             } else {
                 let decoded = call
                     .decoder
-                    .abi_decode_output(returnData, false)
+                    .abi_decode_output(returnData)
                     .map_err(MulticallError::ContractError);
 
                 if let Err(err) = decoded {
