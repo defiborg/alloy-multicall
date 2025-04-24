@@ -472,7 +472,7 @@ where
     ///
     /// # Returns
     /// Returns a [CallBuilder], which uses [IMulticall3::aggregateCall] for decoding.
-    pub fn as_aggregate(&self) -> CallBuilder<(), &P, PhantomData<IMulticall3::aggregateCall>, N> {
+    pub fn as_aggregate(&self) -> CallBuilder<&P, PhantomData<IMulticall3::aggregateCall>, N> {
         let calls = self
             .calls
             .clone()
@@ -494,7 +494,7 @@ where
     /// Returns a [CallBuilder], which uses [IMulticall3::tryAggregateCall] for decoding.
     pub fn as_try_aggregate(
         &self,
-    ) -> CallBuilder<(), &P, PhantomData<IMulticall3::tryAggregateCall>, N> {
+    ) -> CallBuilder<&P, PhantomData<IMulticall3::tryAggregateCall>, N> {
         let mut allow_failure = true;
 
         let calls = self
@@ -528,7 +528,7 @@ where
     /// Returns a [CallBuilder], which uses [IMulticall3::aggregate3Call] for decoding.
     pub fn as_aggregate_3(
         &self,
-    ) -> CallBuilder<(), &P, PhantomData<IMulticall3::aggregate3Call>, N> {
+    ) -> CallBuilder<&P, PhantomData<IMulticall3::aggregate3Call>, N> {
         let calls = self
             .calls
             .clone()
